@@ -25,6 +25,27 @@ namespace VbsWriter
                         var line = sr.ReadLine();
                         // 読み込んだ一行をカンマ毎に分けて配列に格納する
                         var values = line.Split(',');
+
+                        //workProcedure workProcedure = new workProcedure();
+                        //workProcedure.startRow = values[0];
+                        //workProcedure.no = values[1];
+                        //workProcedure.startTime = values[2];
+                        //workProcedure.endTime = values[3];
+                        //workProcedure.totalTime = values[4];
+                        //workProcedure.targetEnvironment = values[5];
+                        //workProcedure.targetArea = values[6];
+                        //workProcedure.workTitle = values[7];
+                        //workProcedure.responsible = values[8];
+                        //workProcedure.workPlace = values[9];
+                        //workProcedure.procedure = values[10];
+                        //workProcedure.sap = values[11];
+                        //workProcedure.eni = values[12];
+                        //workProcedure.hako = values[13];
+                        //workProcedure.asa = values[14];
+                        //workProcedure.hiro = values[15];
+                        //workProcedure.aki = values[16];
+                        //System.Console.Write("{0} ", workProcedure.aki);
+
                         // 出力する
                         foreach (var value in values)
                         {
