@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 
 namespace VbsWriter
 {
@@ -8,9 +9,36 @@ namespace VbsWriter
         public static void Main(string[] args)
         {
             // vbsファイルの保存パスを生成
-            string vbsPath = GetFullPathWithCurrentDirectoryAndTitleAsCSVFileName("test");
-
+            string vbsPath = GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName("test");
             // TODO:CSVファイルを変数CSVへ読み込む
+            try
+            {
+                // csvファイルを開く
+                using (var sr = new System.IO.StreamReader(
+                    @"../../file/test_template.csv"
+                    , Encoding.GetEncoding("shift_jis")))
+                {
+                    // ストリームの末尾まで繰り返す
+                    while (!sr.EndOfStream)
+                    {
+                        // ファイルから一行読み込む
+                        var line = sr.ReadLine();
+                        // 読み込んだ一行をカンマ毎に分けて配列に格納する
+                        var values = line.Split(',');
+                        // 出力する
+                        foreach (var value in values)
+                        {
+                            System.Console.Write("{0} ", value);
+                        }
+                        System.Console.WriteLine();
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                // ファイルを開くのに失敗したとき
+                System.Console.WriteLine(e.Message);
+            }
 
             // TODO:変数CSVから、開始時間が固定された作業（固定作業）のみ抽出して変数koteiLinesに設定
 
@@ -36,7 +64,7 @@ namespace VbsWriter
             }
         }
 
-        private static string GetFullPathWithCurrentDirectoryAndTitleAsCSVFileName(string vbsTitle)
+        private static string GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName(string vbsTitle)
         {
             // カレントディレクトリのパスを取得する
             string CurrentDir = Directory.GetCurrentDirectory();
