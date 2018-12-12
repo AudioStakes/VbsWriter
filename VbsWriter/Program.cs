@@ -8,8 +8,6 @@ namespace VbsWriter
     {
         public static void Main(string[] args)
         {
-            // vbsファイルの保存パスを生成
-            string vbsPath = GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName("test");
             // TODO:CSVファイルを変数CSVへ読み込む
             try
             {
@@ -26,25 +24,50 @@ namespace VbsWriter
                         // 読み込んだ一行をカンマ毎に分けて配列に格納する
                         var values = line.Split(',');
 
-                        //workProcedure workProcedure = new workProcedure();
-                        //workProcedure.startRow = values[0];
-                        //workProcedure.no = values[1];
-                        //workProcedure.startTime = values[2];
-                        //workProcedure.endTime = values[3];
-                        //workProcedure.totalTime = values[4];
-                        //workProcedure.targetEnvironment = values[5];
-                        //workProcedure.targetArea = values[6];
-                        //workProcedure.workTitle = values[7];
-                        //workProcedure.responsible = values[8];
-                        //workProcedure.workPlace = values[9];
-                        //workProcedure.procedure = values[10];
-                        //workProcedure.sap = values[11];
-                        //workProcedure.eni = values[12];
-                        //workProcedure.hako = values[13];
-                        //workProcedure.asa = values[14];
-                        //workProcedure.hiro = values[15];
-                        //workProcedure.aki = values[16];
-                        //System.Console.Write("{0} ", workProcedure.aki);
+                        using (workProcedure workProcedure = new workProcedure())
+                        {
+                            // 一行分のデータをworkProcedureクラスの各プロパティに代入する
+                            workProcedure.startRow = values[0];
+                            workProcedure.no = values[1];
+                            workProcedure.startTime = values[2];
+                            workProcedure.endTime = values[3];
+                            workProcedure.totalTime = values[4];
+                            workProcedure.targetEnvironment = values[5];
+                            workProcedure.targetArea = values[6];
+                            workProcedure.workTitle = values[7];
+                            workProcedure.responsible = values[8];
+                            workProcedure.workPlace = values[9];
+                            workProcedure.procedure = values[10];
+                            workProcedure.sap = values[11];
+                            workProcedure.eni = values[12];
+                            workProcedure.hako = values[13];
+                            workProcedure.asa = values[14];
+                            workProcedure.hiro = values[15];
+                            workProcedure.aki = values[16];
+
+                            // タイトル文字列を作成
+                            var vbsTitle = workProcedure.startTime.Replace(":", "")
+                                + "_" + workProcedure.targetEnvironment
+                                + "_" + workProcedure.workTitle.Replace(" & vbCrLf & ", "")
+                                .Replace("\"", "").Replace(":", "");
+
+                            // タイトルが５０文字より長い場合は先頭から５０文字まで切り取る
+                            vbsTitle = vbsTitle.Length > 50 ? vbsTitle.Substring(0, 50) : vbsTitle;
+
+                            // vbsファイルの保存先パスを作成
+                            string vbsPath = GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName(vbsTitle);
+
+                            // vbsファイルを作成
+                            // 第２引数：毎度新しいファイルを作成するため、Appendフラグ（2番目の引数）をfalseに設定
+                            // 第３引数：VBSで動作するように文字コードをshift-jisに指定
+                            using (var writer = new StreamWriter(vbsPath, false, Encoding.GetEncoding("shift_jis")))
+                            {
+                                // content
+                                var procedure = workProcedure.procedure.Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
+                                var vbsContent = $"MsgBox {procedure} ,vbSystemModal + vbExclamation , \"{vbsTitle}\"";
+                                writer.WriteLine(vbsContent);
+                            }
+                        }
 
                         // 出力する
                         foreach (var value in values)
@@ -73,16 +96,7 @@ namespace VbsWriter
             // TODO:2-1-3.変数lineから、続き作業があるか判別(以下、続きがなくなるまでループ)
             // TODO:2-2.続き作業の呼出がない場合は、ファイルを生成して次のlineへ進む
 
-            // vbsファイルの中身を作成
-            var body = "ここに本文";
-            var title = "ここにタイトル";
-            var vbsContent = "MsgBox \"" + body + "\", vbSystemModal + vbExclamation, \"" + title + "\"";
-            Console.WriteLine(vbsContent);
-
-            // vbsファイルを作成
-            using (var writer = new StreamWriter (vbsPath)){
-                writer.WriteLine(vbsContent);
-            }
+            Console.ReadLine();
         }
 
         private static string GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName(string vbsTitle)
