@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Data;
 using System.IO;
 using System.Text;
+using QuickType;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace VbsWriter
 {
@@ -8,95 +12,112 @@ namespace VbsWriter
     {
         public static void Main(string[] args)
         {
-            // TODO:CSVファイルを変数CSVへ読み込む
-            try
+            // jsonTextファイルを開く
+            using (var sr = new StreamReader(@"../../file/test_template_json.txt", Encoding.GetEncoding("shift_jis")))
             {
-                // csvファイルを開く
-                using (var sr = new System.IO.StreamReader(
-                    @"../../file/test_template.csv"
-                    , Encoding.GetEncoding("shift_jis")))
+                string jsonString = sr.ReadToEnd();
+                var welcomes = Welcome.FromJson(jsonString);
+
+                DataSet dataSet = new DataSet();
+                DataTable table = new DataTable("Table");
+
+                // プロパティの属性を取得
+                PropertyInfo[] infoArrayTOAddColumns = welcomes[0].GetType().GetProperties();
+
+                // プロパティ情報出力をループで回す
+                foreach (PropertyInfo info in infoArrayTOAddColumns)
                 {
-                    // ストリームの末尾まで繰り返す
-                    while (!sr.EndOfStream)
+                    // カラム名の追加
+                    table.Columns.Add(info.Name);
+                }
+
+                // DataSetにDataTableを追加
+                dataSet.Tables.Add(table);
+
+                foreach (var welcome in welcomes)
+                {
+                    DataRow dr = table.NewRow();
+
+                    PropertyInfo[] infoArray = welcome.GetType().GetProperties();
+                    // プロパティ情報出力をループで回す
+                    foreach (PropertyInfo info in infoArray)
                     {
-                        // ファイルから一行読み込む
-                        var line = sr.ReadLine();
-                        // 読み込んだ一行をカンマ毎に分けて配列に格納する
-                        var values = line.Split(',');
-
-                        using (workProcedure workProcedure = new workProcedure())
-                        {
-                            // 一行分のデータをworkProcedureクラスの各プロパティに代入する
-                            workProcedure.startRow = values[0];
-                            workProcedure.no = values[1];
-                            workProcedure.startTime = values[2];
-                            workProcedure.endTime = values[3];
-                            workProcedure.totalTime = values[4];
-                            workProcedure.targetEnvironment = values[5];
-                            workProcedure.targetArea = values[6];
-                            workProcedure.workTitle = values[7];
-                            workProcedure.responsible = values[8];
-                            workProcedure.workPlace = values[9];
-                            workProcedure.procedure = values[10];
-                            workProcedure.sap = values[11];
-                            workProcedure.eni = values[12];
-                            workProcedure.hako = values[13];
-                            workProcedure.asa = values[14];
-                            workProcedure.hiro = values[15];
-                            workProcedure.aki = values[16];
-
-                            // タイトル文字列を作成
-                            var vbsTitle = workProcedure.startTime.Replace(":", "")
-                                + "_" + workProcedure.targetEnvironment
-                                + "_" + workProcedure.workTitle.Replace(" & vbCrLf & ", "")
-                                .Replace("\"", "").Replace(":", "");
-
-                            // タイトルが５０文字より長い場合は先頭から５０文字まで切り取る
-                            vbsTitle = vbsTitle.Length > 50 ? vbsTitle.Substring(0, 50) : vbsTitle;
-
-                            // vbsファイルの保存先パスを作成
-                            string vbsPath = GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName(vbsTitle);
-
-                            // vbsファイルを作成
-                            // 第２引数：毎度新しいファイルを作成するため、Appendフラグ（2番目の引数）をfalseに設定
-                            // 第３引数：VBSで動作するように文字コードをshift-jisに指定
-                            using (var writer = new StreamWriter(vbsPath, false, Encoding.GetEncoding("shift_jis")))
-                            {
-                                // content
-                                var procedure = workProcedure.procedure.Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
-                                var vbsContent = $"MsgBox {procedure} ,vbSystemModal + vbExclamation , \"{vbsTitle}\"";
-                                writer.WriteLine(vbsContent);
-                            }
-                        }
-
-                        // 出力する
-                        foreach (var value in values)
-                        {
-                            System.Console.Write("{0} ", value);
-                        }
-                        System.Console.WriteLine();
+                        Console.WriteLine(info.Name + ": " + info.GetValue(welcome, null));
+                        dr[info.Name] = info.GetValue(welcome, null);
                     }
+
+                    table.Rows.Add(dr);
+                }
+
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    if (!Regex.IsMatch(table.Rows[i]["startTime"].ToString(), "\\d{4}"))
+                    {
+                        Console.WriteLine("startTimeが数字じゃない");
+                        continue;
+                    }
+
+                    // ファイルから一行読み込む
+                    var line = table.Rows[i];
+
+                    // vbsファイルのタイトルを作成
+                    string vbsTitle = createVbsTitleFromTableRow(line);
+
+                    // vbsファイルの保存先パスを作成
+                    string vbsPath = GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName(vbsTitle);
+
+                    // vbsファイルを作成
+                    // 第２引数：毎度新しいファイルを作成するため、Appendフラグ（2番目の引数）をfalseに設定
+                    // 第３引数：VBSで動作するように文字コードをshift-jisに指定
+                    // ＣＳＶの複数行を書き込めるようにするため、あえてusingステートメントを使用しない。
+                    using (var writer = new StreamWriter(vbsPath, false, Encoding.GetEncoding("shift_jis")))
+                    {
+                        // vbsの中身を作成
+                        var procedure = line["procedure"].ToString().Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
+                        var vbsContent = $"val = MsgBox({procedure} ,vbSystemModal + vbExclamation , \"{vbsTitle}\")";
+                        
+                        // 書き込む
+                        writer.WriteLine(vbsContent);
+
+                        var nextRows = table.Select("startTime LIKE 'C" + line["startRow"] + "%' " +
+                            "OR startTime LIKE 'B" + line["startRow"] + "%'");
+
+                        Console.WriteLine(nextRows.Length);
+                        while (nextRows.Length > 0)
+                        {
+                            foreach (var nextRow in nextRows)
+                            {
+                                // vbsファイルのタイトルを作成
+                                string nextVbsTitle = createVbsTitleFromTableRow(nextRow);
+
+                                // content
+                                var nextProcedure = nextRow["procedure"].ToString().Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
+                                var nextVbsContent = $"If val = vbOK  Then val = MsgBox({nextProcedure} ,vbSystemModal + vbExclamation , \"{nextVbsTitle}\")";
+
+                                // 書き込む
+                                writer.WriteLine(nextVbsContent);
+
+                            }
+
+                            nextRows = table.Select("startTime LIKE 'C" + nextRows[0]["startRow"] + "%' " +
+                            "OR startTime LIKE 'B" + nextRows[0]["startRow"] + "%'");
+                        }
+                    };
                 }
             }
-            catch (System.Exception e)
-            {
-                // ファイルを開くのに失敗したとき
-                System.Console.WriteLine(e.Message);
-            }
-
-            // TODO:変数CSVから、開始時間が固定された作業（固定作業）のみ抽出して変数koteiLinesに設定
-
-            // TODO:変数koteiLinesの末尾まで以下のループ処理する。変数lineを用いる。
-
-            // TODO:1.変数vbsContentに変数line分のMsgBox生成スクリプトを追加
-            // TODO:2.変数lineから、続き作業があるか判別
-            // TODO:2-1.続き作業の呼出ある場合は、変数lineに続き作業を設定
-            // TODO:2-1-1.変数vbsContentにOKボタンクリック後の続きスクリプトを追加
-            // TODO:2-1-2.変数vbsContentに変数line分のMsgBox生成スクリプトを追加
-            // TODO:2-1-3.変数lineから、続き作業があるか判別(以下、続きがなくなるまでループ)
-            // TODO:2-2.続き作業の呼出がない場合は、ファイルを生成して次のlineへ進む
-
             Console.ReadLine();
+        }
+
+        private static string createVbsTitleFromTableRow(DataRow row)
+        {
+            // タイトル文字列を作成
+            string vbsTitle = row["startTime"].ToString().Replace(":", "")
+                + "_" + row["targetEnvironment"]
+                + "_" + row["workTitle"].ToString().Replace(" & vbCrLf & ", "")
+                .Replace("\"", "").Replace(":", "");
+
+            // タイトルが５０文字より長い場合は先頭から５０文字まで切り取る
+            return vbsTitle.Length > 50 ? vbsTitle.Substring(0, 50) : vbsTitle;
         }
 
         private static string GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName(string vbsTitle)
