@@ -100,7 +100,7 @@ namespace VbsWriter
                             }
 
                             nextRows = table.Select("startTime LIKE 'C" + nextRows[0]["startRow"] + "%' " +
-                            "OR startTime LIKE 'B" + nextRows[0]["startRow"] + "%'");
+                            "OR startTime LIKE '%B" + nextRows[0]["startRow"] + "%'");
                         }
                     };
                 }
