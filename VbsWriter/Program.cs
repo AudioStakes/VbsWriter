@@ -85,6 +85,7 @@ namespace VbsWriter
                         Console.WriteLine(nextRows.Length);
                         while (nextRows.Length > 0)
                         {
+                            // TODO:nextRowsが２つ以上ある場合はＯＫボタン押下後にVBSを２つ（nextRowsすべて分）起動するように修正
                             foreach (var nextRow in nextRows)
                             {
                                 // vbsファイルのタイトルを作成
