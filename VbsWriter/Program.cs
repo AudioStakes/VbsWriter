@@ -115,7 +115,7 @@ namespace VbsWriter
                 System.Globalization.DateTimeFormatInfo.InvariantInfo,
                 System.Globalization.DateTimeStyles.NoCurrentDateDefault);
             TimeSpan totalTime = new TimeSpan(0, 0, int.Parse(row["totalTime"].ToString()), 0);
-            DateTime startTime = endTime - totalTime;
+            DateTime startTime = endTime.AddDays(1) - totalTime; // 最小値からの引き算エラー回避のため、endTimeに１追加
 
             // タイトル文字列を作成
             string vbsTitle = startTime.ToString("HHmm").Replace(":", "")
