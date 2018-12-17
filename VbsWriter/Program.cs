@@ -61,7 +61,7 @@ namespace VbsWriter
                     var line = table.Rows[i];
 
                     // vbsファイルのタイトルを作成
-                    string vbsTitle = createVbsTitleFromTableRow(line);
+                    string vbsTitle = CreateVbsTitleFromTableRow(line);
 
                     // vbsファイルの保存先パスを作成
                     string vbsPath = GetFullPathWithCurrentDirectoryAndTitleAsVBSFileName(vbsTitle);
@@ -88,7 +88,7 @@ namespace VbsWriter
                             foreach (var nextRow in nextRows)
                             {
                                 // vbsファイルのタイトルを作成
-                                string nextVbsTitle = createVbsTitleFromTableRow(nextRow);
+                                string nextVbsTitle = CreateVbsTitleFromTableRow(nextRow);
 
                                 // content
                                 var nextProcedure = nextRow["procedure"].ToString().Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
