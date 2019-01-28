@@ -112,7 +112,7 @@ namespace VbsWriter
         private static string CreateVbsTitleFromTableRow(DataRow row)
         {
             // 開始時間を生成
-            DateTime endTime = DateTime.ParseExact(row["endTime"].ToString(), "HHmm",
+            DateTime endTime = DateTime.ParseExact(row["endTime"].ToString().PadLeft(4, '0'), "HHmm",
                 System.Globalization.DateTimeFormatInfo.InvariantInfo,
                 System.Globalization.DateTimeStyles.NoCurrentDateDefault);
             TimeSpan totalTime = new TimeSpan(0, 0, int.Parse(row["totalTime"].ToString()), 0);
