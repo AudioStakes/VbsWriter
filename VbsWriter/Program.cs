@@ -74,7 +74,7 @@ namespace VbsWriter
                     {
                         // vbsの中身を作成
                         var procedure = line["procedure"].ToString().Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
-                        var vbsContent = $"val = MsgBox({procedure} ,vbSystemModal + vbExclamation , \"{vbsTitle}\")";
+                        var vbsContent = $"val = MsgBox(\"{procedure}\" ,vbSystemModal + vbExclamation , \"{vbsTitle}\")";
                         
                         // 書き込む
                         writer.WriteLine(vbsContent);
@@ -93,7 +93,7 @@ namespace VbsWriter
 
                                 // content
                                 var nextProcedure = nextRow["procedure"].ToString().Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
-                                var nextVbsContent = $"If val = vbOK  Then val = MsgBox({nextProcedure} ,vbSystemModal + vbExclamation , \"{nextVbsTitle}\")";
+                                var nextVbsContent = $"If val = vbOK  Then val = MsgBox(\"{nextProcedure}\" ,vbSystemModal + vbExclamation , \"{nextVbsTitle}\")";
 
                                 // 書き込む
                                 writer.WriteLine(nextVbsContent);
