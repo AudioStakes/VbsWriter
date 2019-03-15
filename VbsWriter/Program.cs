@@ -73,7 +73,7 @@ namespace VbsWriter
                     using (var writer = new StreamWriter(vbsPath, false, Encoding.GetEncoding("shift_jis")))
                     {
                         // vbsの中身を作成
-                        var procedure = line["procedure"].ToString().Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
+                        var procedure = GetFormattedProcedure(line["procedure"].ToString());
                         var vbsContent = $"val = MsgBox(\"{procedure}\" ,vbSystemModal + vbExclamation , \"{vbsTitle}\")";
                         
                         // 書き込む
@@ -92,7 +92,7 @@ namespace VbsWriter
                                 string nextVbsTitle = CreateVbsTitleFromTableRow(nextRow);
 
                                 // content
-                                var nextProcedure = nextRow["procedure"].ToString().Replace("\"\" & vbCrLf & \"\"", "\" & vbCrLf & \"");
+                                var nextProcedure = GetFormattedProcedure(nextRow["procedure"].ToString());
                                 var nextVbsContent = $"If val = vbOK  Then val = MsgBox(\"{nextProcedure}\" ,vbSystemModal + vbExclamation , \"{nextVbsTitle}\")";
 
                                 // 書き込む
@@ -107,6 +107,13 @@ namespace VbsWriter
                 }
             }
             Console.ReadLine();
+        }
+
+        // procedure列の文字列をvbsファイルにて読み込めるように整形します
+        private static string GetFormattedProcedure(String procedure)
+        {
+            return procedure.Replace("\"", "`")
+                .Replace("` & vbCrLf & `", "\" & vbCrLf & \"");
         }
 
         private static string CreateVbsTitleFromTableRow(DataRow row)
